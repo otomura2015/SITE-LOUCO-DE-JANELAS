@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Chaos Desktop</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:#181818;
+    font-family:Arial,sans-serif;
+}
+
+#topo{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:60px;
+    background:#222;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    z-index:9999;
+}
+
+button{
+    padding:10px;
+    cursor:pointer;
+}
+
+.janela{
+    position:absolute;
+    width:250px;
+    background:#2a2a2a;
+    border:2px solid #555;
+    border-radius:10px;
+    overflow:hidden;
+    user-select:none;
+}
+
+.barra{
+    background:#3a3a3a;
+    color:white;
+    padding:8px;
+    cursor:grab;
+    display:flex;
+    justify-content:space-between;
+}
+
+.barra button{
+    padding:2px 8px;
+}
+
+.janela img{
+    width:100%;
+    display:block;
+}
+</style>
+</head>
+<body>
+
+<div id="topo">
+    <button onclick="novaJanela()">➕ Nova Janela</button>
+    <button onclick="spawn10()">🎲 Criar 10</button>
+    <button onclick="limparTudo()">🗑️ Limpar Tudo</button>
+</div>
+
+<script>
+
+const imagens = [
+    "1.jpg",
+    "2.jpg",
+    "3.jpg",
+    "4.jpg",
+    "5.jpg"
+];
+
+const janelas = [];
+
+function novaJanela(){
+
+    const img =
+    imagens[Math.floor(Math.random()*imagens.length)];
+
+    const janela = document.createElement("div");
+    janela.className = "janela";
+
+    janela.innerHTML = `
+        <div class="barra">
+            Imagem
+            <button>X</button>
+        </div>
+        <img src="${img}">
+    `;
+
+    document.body.appendChild(janela);
+
+    const obj = {
+        el: janela,
+        x: Math.random()*(window.innerWidth-300),
+        y: 100,
+        vx: (Math.random()-0.5)*10,
+        vy: 0,
+        segurando:false,
+        ultimoX:0,
+        ultimoY:0
+    };
+
+    const barra = janela.querySelector(".barra");
+
+    barra.addEventListener("mousedown", e=>{
+
+        obj.segurando=true;
+
+        obj.ultimoX=e.clientX;
+        obj.ultimoY=e.clientY;
+
+    });
+
+    document.addEventListener("mousemove", e=>{
+
+        if(!obj.segurando) return;
+
+        const dx=e.clientX-obj.ultimoX;
+        const dy=e.clientY-obj.ultimoY;
+
+        obj.x+=dx;
+        obj.y+=dy;
+
+        obj.vx=dx;
+        obj.vy=dy;
+
+        obj.ultimoX=e.clientX;
+        obj.ultimoY=e.clientY;
+
+    });
+
+    document.addEventListener("mouseup", ()=>{
+        obj.segurando=false;
+    });
+
+    janela.querySelector("button")
+    .onclick=()=>{
+
+        janela.remove();
+
+        const i=janelas.indexOf(obj);
+
+        if(i!=-1){
+            janelas.splice(i,1);
+        }
+    };
+
+    janelas.push(obj);
+}
+
+function spawn10(){
+    for(let i=0;i<10;i++){
+        novaJanela();
+    }
+}
+
+function limparTudo(){
+
+    janelas.forEach(j=>{
+        j.el.remove();
+    });
+
+    janelas.length=0;
+}
+
+const gravidade = 0.5;
+const quique = 0.75;
+const atrito = 0.995;
+
+function loop(){
+
+    for(const j of janelas){
+
+        if(!j.segurando){
+
+            j.vy += gravidade;
+
+            j.x += j.vx;
+            j.y += j.vy;
+
+            j.vx *= atrito;
+
+            const largura = j.el.offsetWidth;
+            const altura = j.el.offsetHeight;
+
+            if(j.x < 0){
+                j.x = 0;
+                j.vx *= -quique;
+            }
+
+            if(j.x + largura > window.innerWidth){
+                j.x = window.innerWidth - largura;
+                j.vx *= -quique;
+            }
+
+            if(j.y < 60){
+                j.y = 60;
+                j.vy *= -quique;
+            }
+
+            if(j.y + altura > window.innerHeight){
+
+                j.y = window.innerHeight - altura;
+
+                j.vy *= -quique;
+
+                if(Math.abs(j.vy) < 1){
+                    j.vy = 0;
+                }
+            }
+        }
+
+        j.el.style.left = j.x + "px";
+        j.el.style.top = j.y + "px";
+    }
+
+    requestAnimationFrame(loop);
+}
+
+loop();
+
+</script>
+
+</body>
+</html>
