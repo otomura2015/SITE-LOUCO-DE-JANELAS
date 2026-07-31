@@ -90,6 +90,14 @@ const imagens = [
 
 const janelas = [];
 
+
+const somBatida = new Audio("som.mp3");
+
+function tocarSom(){
+    somBatida.currentTime = 0;
+    somBatida.play();
+}
+
 function novaJanela(){
 
     const img =
@@ -205,6 +213,7 @@ function loop(){
             if(j.x < 0){
                 j.x = 0;
                 j.vx *= -quique;
+                tocarSom();
             }
 
             if(j.x + largura > window.innerWidth){
